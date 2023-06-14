@@ -75,6 +75,9 @@ class HttpClient(Client):
         self.headers = {}
         ch_settings = settings or {}
         self.http = pool_mgr
+        _s = database.split('/')
+        self.url += '/' + '/'.join(_s[:-1]) + '/'
+        database = _s[-1]
         if interface == 'https':
             if not https_proxy:
                 https_proxy = check_env_proxy('https', host, port)
