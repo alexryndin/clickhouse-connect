@@ -7,7 +7,7 @@ try:
     from Cython.Build import cythonize
     from Cython import __version__ as cython_version
 
-    print(f'Using Cython {cython_version}to build cython modules')
+    print(f'Using Cython {cython_version} to build cython modules')
     c_modules = cythonize('clickhouse_connect/driverc/*.pyx', language_level='3str')
 except ImportError as ex:
     print('Cython Install Failed, Not Building C Extensions: ', ex)
@@ -49,6 +49,7 @@ def run_setup(try_c: bool = True):
         license='Apache License 2.0',
         install_requires=[
             'certifi',
+            'importlib_metadata',
             'urllib3>=1.26',
             'pytz',
             'zstandard',

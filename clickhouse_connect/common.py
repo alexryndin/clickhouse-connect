@@ -2,16 +2,23 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Sequence, Optional, Dict
 
-import pkg_resources
+from importlib_metadata import PackageNotFoundError, distribution
 
 from clickhouse_connect.driver.exceptions import ProgrammingError
 
 
 def version():
     try:
-        return pkg_resources.get_distribution('clickhouse-connect').version
-    except pkg_resources.ResolutionError:
+        return distribution('clickhouse-connect').version
+    except PackageNotFoundError:
         return 'development'
+
+
+def format_error(msg: str) -> str:
+    max_size = _common_settings['max_error_size'].value
+    if max_size:
+        return msg[:max_size]
+    return msg
 
 
 @dataclass
@@ -66,3 +73,5 @@ _init_common('readonly', (0, 1), 0)  # Implied "read_only" ClickHouse settings f
 # Use the client protocol version  This is needed for DateTime timezone columns but breaks with current version of
 # chproxy
 _init_common('use_protocol_version', (True, False), True)
+
+_init_common('max_error_size', (), 1024)

@@ -40,9 +40,12 @@ class NativeTransform:
                         col_types.append(col_type)
                     else:
                         col_type = col_types[col_num]
-                    context.start_column(name)
-                    column = col_type.read_column(source, num_rows, context)
-                    result_block.append(column)
+                    if num_rows == 0:
+                        result_block.append(tuple())
+                    else:
+                        context.start_column(name)
+                        column = col_type.read_column(source, num_rows, context)
+                        result_block.append(column)
             except Exception as ex:
                 source.close()
                 if isinstance(ex, StreamCompleteException):
@@ -83,6 +86,7 @@ class NativeTransform:
         def chunk_gen():
             for x in context.next_block():
                 output = bytearray()
+                output += x.prefix
                 write_leb128(x.column_count, output)
                 write_leb128(x.row_count, output)
                 for col_name, col_type, data in zip(x.column_names, x.column_types, x.column_data):

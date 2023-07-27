@@ -220,7 +220,7 @@ class Enum(ClickHouseType):
 
     def _write_column_binary(self, column: Union[Sequence, MutableSequence], dest: bytearray, _ctx):
         first = self._first_value(column)
-        if first is None or isinstance(first, int):
+        if first is None or not isinstance(first, str):
             if self.nullable:
                 column = [0 if not x else x for x in column]
             write_array(self._array_type, column, dest)
@@ -286,11 +286,14 @@ class Decimal(ClickHouseType):
         return new_col
 
     def _write_column_binary(self, column: Union[Sequence, MutableSequence], dest: bytearray, _ctx):
-        mult = self._mult
-        if self.nullable:
-            write_array(self._array_type, [int(x * mult) if x else 0 for x in column], dest)
-        else:
-            write_array(self._array_type, [int(x * mult) for x in column], dest)
+        with decimal.localcontext() as ctx:
+            ctx.prec = self.prec
+            dec = decimal.Decimal
+            mult = self._mult
+            if self.nullable:
+                write_array(self._array_type, [int(dec(x) * mult) if x else 0 for x in column], dest)
+            else:
+                write_array(self._array_type, [int(dec(x) * mult) for x in column], dest)
 
     def _active_null(self, ctx: QueryContext):
         if ctx.use_none:
